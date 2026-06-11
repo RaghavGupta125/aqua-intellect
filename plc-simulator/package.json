@@ -1,0 +1,17 @@
+{
+  "name": "aqua-intellect-plc-simulator",
+  "version": "1.0.0",
+  "description": "Virtual PLC simulator for Aqua Intellect — sends realistic telemetry via HTTP POST",
+  "main": "plc.js",
+  "scripts": {
+    "start": "node plc.js",
+    "dev": "nodemon plc.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.7",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

@@ -1,0 +1,38 @@
+const mongoose = require('mongoose');
+
+const thresholdSchema = new mongoose.Schema(
+  {
+    tdsMax: { type: Number, default: 50 },
+    pressureMin: { type: Number, default: 2.0 },
+    pressureMax: { type: Number, default: 6.0 },
+    phMin: { type: Number, default: 6.5 },
+    phMax: { type: Number, default: 8.5 },
+    tankLevelMin: { type: Number, default: 20 },
+    flowMin: { type: Number, default: 50 },
+  },
+  { _id: false }
+);
+
+const plantSchema = new mongoose.Schema(
+  {
+    plantId: { type: String, required: true, unique: true, trim: true },
+    name: { type: String, required: true, trim: true },
+    type: { type: String, enum: ['RO', 'UF', 'NF', 'MBR'], required: true },
+    facility: { type: mongoose.Schema.Types.ObjectId, ref: 'Facility', required: true },
+    facilityName: { type: String },
+    capacity: { type: Number, default: 0 }, // m³/day
+    status: { type: String, enum: ['online', 'offline', 'maintenance', 'fault'], default: 'offline' },
+    thresholds: { type: thresholdSchema, default: () => ({}) },
+    lastTelemetry: {
+      tds: Number,
+      ph: Number,
+      flow: Number,
+      pressure: Number,
+      tankLevel: Number,
+      timestamp: Date,
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model('Plant', plantSchema);
