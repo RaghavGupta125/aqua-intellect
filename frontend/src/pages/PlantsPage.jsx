@@ -81,7 +81,7 @@ export default function PlantsPage() {
                     <td><StatusBadge status={plant.status} /></td>
                     <td className="font-mono text-sm">{plant.capacity} m³/d</td>
                     <td className="font-mono text-sm">
-                      {plant.lastTelemetry?.tds != null ? `${plant.lastTelemetry.tds} ppm` : '—'}
+                      {plant.type === 'UF' ? '—' : (plant.lastTelemetry?.tds != null ? `${plant.lastTelemetry.tds} ppm` : '—')}
                     </td>
                     <td className="font-mono text-sm">
                       {plant.lastTelemetry?.flow != null ? `${plant.lastTelemetry.flow} m³/h` : '—'}

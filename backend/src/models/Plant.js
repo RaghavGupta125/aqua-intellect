@@ -44,6 +44,16 @@ const plantSchema = new mongoose.Schema(
       hvpIndicator: Boolean,
       lpsCutoff: Boolean,
       hpsCutoff: Boolean,
+      // UF Specific
+      feedPressure: Number,
+      productPressure: Number,
+      backwashPressure: Number,
+      components: {
+        sv: [{ id: String, state: Boolean, _id: false }],
+        rawWaterPumps: [{ id: String, state: Boolean, _id: false }],
+        highPressurePumps: [{ id: String, state: Boolean, _id: false }],
+        backPressurePumps: [{ id: String, state: Boolean, _id: false }],
+      }
     },
   },
   { timestamps: true }

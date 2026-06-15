@@ -27,6 +27,17 @@ const telemetrySchema = new mongoose.Schema(
     hvpIndicator: { type: Boolean },
     lpsCutoff: { type: Boolean },
     hpsCutoff: { type: Boolean },
+    // UF Specific
+    feedPressure: { type: Number },
+    productPressure: { type: Number },
+    backwashPressure: { type: Number },
+    // Dynamic components (for UF arrays)
+    components: {
+      sv: [{ id: String, state: Boolean }],
+      rawWaterPumps: [{ id: String, state: Boolean }],
+      highPressurePumps: [{ id: String, state: Boolean }],
+      backPressurePumps: [{ id: String, state: Boolean }],
+    }
   },
   { timestamps: true }
 );

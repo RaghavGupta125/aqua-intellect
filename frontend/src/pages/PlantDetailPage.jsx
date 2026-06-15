@@ -99,43 +99,75 @@ function OverviewTab({ plant, liveData, onPlantUpdate }) {
           <h3 className="text-sm font-semibold text-ink">Live Readings</h3>
         </div>
         <div className="px-4">
-          <MetricRow label="Inlet TDS" value={d?.inletTds} unit="ppm" />
-          <MetricRow
-            label="Outlet TDS"
-            value={d?.outletTds ?? d?.tds}
-            unit="ppm"
-            bad={(d?.outletTds ?? d?.tds) > t.tdsMax}
-            good={(d?.outletTds ?? d?.tds) <= t.tdsMax}
-          />
-          <MetricRow label="Raw Water Flow" value={d?.rawWaterFlow} unit="m³/h" />
-          <MetricRow
-            label="Product Flow"
-            value={d?.productWaterFlow ?? d?.flow}
-            unit="m³/h"
-            bad={(d?.productWaterFlow ?? d?.flow) < t.flowMin}
-            good={(d?.productWaterFlow ?? d?.flow) >= t.flowMin}
-          />
-          <MetricRow label="Reject Flow" value={d?.rejectFlow} unit="m³/h" />
-          
-          <MetricRow label="Inlet Pressure 1" value={d?.inletPressure1} unit="bar" />
-          <MetricRow label="Inlet Pressure 2" value={d?.inletPressure2} unit="bar" />
-          <MetricRow label="Inlet Pressure 3" value={d?.inletPressure3} unit="bar" />
-          <MetricRow label="Outlet Pressure 1" value={d?.outletPressure1} unit="bar" />
-          <MetricRow label="Outlet Pressure 2" value={d?.outletPressure2} unit="bar" />
-          
-          <MetricRow
-            label="pH"
-            value={d?.ph}
-            bad={d?.ph < t.phMin || d?.ph > t.phMax}
-            good={d?.ph >= t.phMin && d?.ph <= t.phMax}
-          />
-          <MetricRow
-            label="Tank Level"
-            value={d?.tankLevel}
-            unit="%"
-            bad={d?.tankLevel < t.tankLevelMin}
-            good={d?.tankLevel >= t.tankLevelMin}
-          />
+          {plant.type === 'UF' ? (
+            <>
+              <MetricRow label="Feed Pressure" value={d?.feedPressure} unit="bar" />
+              <MetricRow label="Product Pressure" value={d?.productPressure} unit="bar" />
+              <MetricRow label="Backwash Pressure" value={d?.backwashPressure} unit="bar" />
+              <MetricRow
+                label="Product Flow"
+                value={d?.productWaterFlow ?? d?.flow}
+                unit="m³/h"
+                bad={(d?.productWaterFlow ?? d?.flow) < t.flowMin}
+                good={(d?.productWaterFlow ?? d?.flow) >= t.flowMin}
+              />
+              <MetricRow label="Raw Water Flow" value={d?.rawWaterFlow} unit="m³/h" />
+              <MetricRow label="Reject Flow" value={d?.rejectFlow} unit="m³/h" />
+              <MetricRow
+                label="pH"
+                value={d?.ph}
+                bad={d?.ph < t.phMin || d?.ph > t.phMax}
+                good={d?.ph >= t.phMin && d?.ph <= t.phMax}
+              />
+              <MetricRow
+                label="Tank Level"
+                value={d?.tankLevel}
+                unit="%"
+                bad={d?.tankLevel < t.tankLevelMin}
+                good={d?.tankLevel >= t.tankLevelMin}
+              />
+            </>
+          ) : (
+            <>
+              <MetricRow label="Inlet TDS" value={d?.inletTds} unit="ppm" />
+              <MetricRow
+                label="Outlet TDS"
+                value={d?.outletTds ?? d?.tds}
+                unit="ppm"
+                bad={(d?.outletTds ?? d?.tds) > t.tdsMax}
+                good={(d?.outletTds ?? d?.tds) <= t.tdsMax}
+              />
+              <MetricRow label="Raw Water Flow" value={d?.rawWaterFlow} unit="m³/h" />
+              <MetricRow
+                label="Product Flow"
+                value={d?.productWaterFlow ?? d?.flow}
+                unit="m³/h"
+                bad={(d?.productWaterFlow ?? d?.flow) < t.flowMin}
+                good={(d?.productWaterFlow ?? d?.flow) >= t.flowMin}
+              />
+              <MetricRow label="Reject Flow" value={d?.rejectFlow} unit="m³/h" />
+              
+              <MetricRow label="Inlet Pressure 1" value={d?.inletPressure1} unit="bar" />
+              <MetricRow label="Inlet Pressure 2" value={d?.inletPressure2} unit="bar" />
+              <MetricRow label="Inlet Pressure 3" value={d?.inletPressure3} unit="bar" />
+              <MetricRow label="Outlet Pressure 1" value={d?.outletPressure1} unit="bar" />
+              <MetricRow label="Outlet Pressure 2" value={d?.outletPressure2} unit="bar" />
+              
+              <MetricRow
+                label="pH"
+                value={d?.ph}
+                bad={d?.ph < t.phMin || d?.ph > t.phMax}
+                good={d?.ph >= t.phMin && d?.ph <= t.phMax}
+              />
+              <MetricRow
+                label="Tank Level"
+                value={d?.tankLevel}
+                unit="%"
+                bad={d?.tankLevel < t.tankLevelMin}
+                good={d?.tankLevel >= t.tankLevelMin}
+              />
+            </>
+          )}
         </div>
       </div>
 
@@ -145,30 +177,60 @@ function OverviewTab({ plant, liveData, onPlantUpdate }) {
           <h3 className="text-sm font-semibold text-ink">Equipment Status</h3>
         </div>
         <div className="px-4">
-          <MetricRow 
-            label="Raw Water Pump (RWP)" 
-            value={d?.rwpIndicator !== undefined ? (d.rwpIndicator ? 'Running' : 'Tripped') : '—'} 
-            bad={d?.rwpIndicator === false} 
-            good={d?.rwpIndicator === true} 
-          />
-          <MetricRow 
-            label="High Vol Pump (HVP)" 
-            value={d?.hvpIndicator !== undefined ? (d.hvpIndicator ? 'Running' : 'Tripped') : '—'} 
-            bad={d?.hvpIndicator === false} 
-            good={d?.hvpIndicator === true} 
-          />
-          <MetricRow 
-            label="LPS Cutoff" 
-            value={d?.lpsCutoff !== undefined ? (d.lpsCutoff ? 'Normal' : 'Cutoff') : '—'} 
-            bad={d?.lpsCutoff === false} 
-            good={d?.lpsCutoff === true} 
-          />
-          <MetricRow 
-            label="HPS Cutoff" 
-            value={d?.hpsCutoff !== undefined ? (d.hpsCutoff ? 'Normal' : 'Cutoff') : '—'} 
-            bad={d?.hpsCutoff === false} 
-            good={d?.hpsCutoff === true} 
-          />
+          {plant.type === 'UF' && d?.components ? (
+            <div className="py-2 space-y-4">
+              {['sv', 'rawWaterPumps', 'highPressurePumps', 'backPressurePumps'].map(compKey => {
+                const arr = d.components[compKey] || [];
+                if (arr.length === 0) return null;
+                const titles = {
+                  sv: 'Solenoid Valves (SV)',
+                  rawWaterPumps: 'Raw Water Pumps',
+                  highPressurePumps: 'High Pressure Pumps',
+                  backPressurePumps: 'Back Pressure Pumps'
+                };
+                return (
+                  <div key={compKey} className="pb-2 border-b border-surface-border last:border-0 last:pb-0">
+                    <div className="text-sm text-ink-secondary mb-2 font-medium">{titles[compKey]}</div>
+                    <div className="flex flex-wrap gap-3">
+                      {arr.map(c => (
+                        <div key={c.id} className="flex items-center gap-1.5 bg-surface-hover px-2.5 py-1 rounded-md border border-surface-border">
+                          <div className={clsx('w-2 h-2 rounded-full', c.state ? 'bg-green-500' : 'bg-slate-300')} />
+                          <span className="text-xs font-mono text-ink">#{c.id}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <>
+              <MetricRow 
+                label="Raw Water Pump (RWP)" 
+                value={d?.rwpIndicator !== undefined ? (d.rwpIndicator ? 'Running' : 'Tripped') : '—'} 
+                bad={d?.rwpIndicator === false} 
+                good={d?.rwpIndicator === true} 
+              />
+              <MetricRow 
+                label="High Vol Pump (HVP)" 
+                value={d?.hvpIndicator !== undefined ? (d.hvpIndicator ? 'Running' : 'Tripped') : '—'} 
+                bad={d?.hvpIndicator === false} 
+                good={d?.hvpIndicator === true} 
+              />
+              <MetricRow 
+                label="LPS Cutoff" 
+                value={d?.lpsCutoff !== undefined ? (d.lpsCutoff ? 'Normal' : 'Cutoff') : '—'} 
+                bad={d?.lpsCutoff === false} 
+                good={d?.lpsCutoff === true} 
+              />
+              <MetricRow 
+                label="HPS Cutoff" 
+                value={d?.hpsCutoff !== undefined ? (d.hpsCutoff ? 'Normal' : 'Cutoff') : '—'} 
+                bad={d?.hpsCutoff === false} 
+                good={d?.hpsCutoff === true} 
+              />
+            </>
+          )}
         </div>
       </div>
 
@@ -284,7 +346,7 @@ function OverviewTab({ plant, liveData, onPlantUpdate }) {
 }
 
 // ── Charts tab ────────────────────────────────────────────────
-function ChartsTab({ plantId }) {
+function ChartsTab({ plantId, plantType }) {
   const [telemetry, setTelemetry] = useState([]);
   const [hours, setHours] = useState(24);
   const [loading, setLoading] = useState(true);
@@ -365,97 +427,158 @@ function ChartsTab({ plantId }) {
         </div>
       ) : (
         <>
-          {/* TDS Chart */}
-          <div className="card">
-            <div className="card-header">
-              <h3 className="text-sm font-semibold text-ink">TDS Trend (ppm)</h3>
-            </div>
-            <div className="p-4">
-              <ResponsiveContainer width="100%" height={180}>
-                <LineChart data={telemetry} {...chartProps}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
-                  <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
-                  <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
-                  <Line {...lineProps('tds', '#0ea5e9')} name="TDS (ppm)" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          {plantType === 'UF' ? (
+            <>
+              {/* UF Specific Charts */}
+              <div className="card">
+                <div className="card-header">
+                  <h3 className="text-sm font-semibold text-ink">Pressure Trend (bar)</h3>
+                </div>
+                <div className="p-4">
+                  <ResponsiveContainer width="100%" height={180}>
+                    <LineChart data={telemetry} {...chartProps}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
+                      <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
+                      <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
+                      <Legend />
+                      <Line {...lineProps('feedPressure', '#334155')} name="Feed Pressure" />
+                      <Line {...lineProps('productPressure', '#16a34a')} name="Product Pressure" />
+                      <Line {...lineProps('backwashPressure', '#d97706')} name="Backwash Pressure" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="text-sm font-semibold text-ink">Product Flow (m³/h)</h3>
+                  </div>
+                  <div className="p-4">
+                    <ResponsiveContainer width="100%" height={160}>
+                      <LineChart data={telemetry} {...chartProps}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
+                        <Line {...lineProps('productWaterFlow', '#16a34a')} name="Flow (m³/h)" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="text-sm font-semibold text-ink">Tank Level (%)</h3>
+                  </div>
+                  <div className="p-4">
+                    <ResponsiveContainer width="100%" height={160}>
+                      <LineChart data={telemetry} {...chartProps}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
+                        <Line {...lineProps('tankLevel', '#7c3aed')} name="Tank Level (%)" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* TDS Chart (RO Default) */}
+              <div className="card">
+                <div className="card-header">
+                  <h3 className="text-sm font-semibold text-ink">TDS Trend (ppm)</h3>
+                </div>
+                <div className="p-4">
+                  <ResponsiveContainer width="100%" height={180}>
+                    <LineChart data={telemetry} {...chartProps}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
+                      <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
+                      <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
+                      <Line {...lineProps('tds', '#0ea5e9')} name="TDS (ppm)" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
 
-          {/* Pressure + Flow */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="card">
-              <div className="card-header">
-                <h3 className="text-sm font-semibold text-ink">Pressure Trend (bar)</h3>
-              </div>
-              <div className="p-4">
-                <ResponsiveContainer width="100%" height={160}>
-                  <LineChart data={telemetry} {...chartProps}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
-                    <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
-                    <Line {...lineProps('pressure', '#334155')} name="Pressure (bar)" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+              {/* Pressure + Flow */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="text-sm font-semibold text-ink">Pressure Trend (bar)</h3>
+                  </div>
+                  <div className="p-4">
+                    <ResponsiveContainer width="100%" height={160}>
+                      <LineChart data={telemetry} {...chartProps}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
+                        <Line {...lineProps('pressure', '#334155')} name="Pressure (bar)" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
 
-            <div className="card">
-              <div className="card-header">
-                <h3 className="text-sm font-semibold text-ink">Flow Trend (m³/h)</h3>
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="text-sm font-semibold text-ink">Flow Trend (m³/h)</h3>
+                  </div>
+                  <div className="p-4">
+                    <ResponsiveContainer width="100%" height={160}>
+                      <LineChart data={telemetry} {...chartProps}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
+                        <Line {...lineProps('flow', '#16a34a')} name="Flow (m³/h)" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               </div>
-              <div className="p-4">
-                <ResponsiveContainer width="100%" height={160}>
-                  <LineChart data={telemetry} {...chartProps}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
-                    <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
-                    <Line {...lineProps('flow', '#16a34a')} name="Flow (m³/h)" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
 
-          {/* pH + Tank Level */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="card">
-              <div className="card-header">
-                <h3 className="text-sm font-semibold text-ink">pH Trend</h3>
-              </div>
-              <div className="p-4">
-                <ResponsiveContainer width="100%" height={160}>
-                  <LineChart data={telemetry} {...chartProps}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
-                    <YAxis domain={[6, 9]} tick={{ fontSize: 11, fill: '#64748b' }} />
-                    <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
-                    <Line {...lineProps('ph', '#d97706')} name="pH" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+              {/* pH + Tank Level */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="text-sm font-semibold text-ink">pH Trend</h3>
+                  </div>
+                  <div className="p-4">
+                    <ResponsiveContainer width="100%" height={160}>
+                      <LineChart data={telemetry} {...chartProps}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <YAxis domain={[6, 9]} tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
+                        <Line {...lineProps('ph', '#d97706')} name="pH" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
 
-            <div className="card">
-              <div className="card-header">
-                <h3 className="text-sm font-semibold text-ink">Tank Level (%)</h3>
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="text-sm font-semibold text-ink">Tank Level (%)</h3>
+                  </div>
+                  <div className="p-4">
+                    <ResponsiveContainer width="100%" height={160}>
+                      <LineChart data={telemetry} {...chartProps}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
+                        <Line {...lineProps('tankLevel', '#7c3aed')} name="Tank Level (%)" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               </div>
-              <div className="p-4">
-                <ResponsiveContainer width="100%" height={160}>
-                  <LineChart data={telemetry} {...chartProps}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
-                    <Tooltip contentStyle={{ fontSize: 12, border: '1px solid #e2e8f0' }} />
-                    <Line {...lineProps('tankLevel', '#7c3aed')} name="Tank Level (%)" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
+            </>
+          )}
         </>
       )}
     </div>
@@ -755,7 +878,7 @@ export default function PlantDetailPage() {
 
       {/* Tab content */}
       {activeTab === 'Overview' && <OverviewTab plant={plant} liveData={liveData} onPlantUpdate={setPlant} />}
-      {activeTab === 'Charts' && <ChartsTab plantId={plant.plantId} />}
+      {activeTab === 'Charts' && <ChartsTab plantId={plant.plantId} plantType={plant.type} />}
       {activeTab === 'Alarms' && <AlarmsTab plantId={plant.plantId} />}
       {activeTab === 'Reports' && <ReportsTab plant={plant} />}
     </div>

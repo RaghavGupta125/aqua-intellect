@@ -15,7 +15,8 @@ router.post('/', async (req, res) => {
       inletPressure1, inletPressure2, inletPressure3,
       outletPressure1, outletPressure2,
       rawWaterFlow, productWaterFlow, rejectFlow,
-      rwpIndicator, hvpIndicator, lpsCutoff, hpsCutoff
+      rwpIndicator, hvpIndicator, lpsCutoff, hpsCutoff,
+      feedPressure, productPressure, backwashPressure, components
     } = req.body;
 
     if (!plantId) {
@@ -36,7 +37,8 @@ router.post('/', async (req, res) => {
       inletPressure1, inletPressure2, inletPressure3,
       outletPressure1, outletPressure2,
       rawWaterFlow, productWaterFlow, rejectFlow,
-      rwpIndicator, hvpIndicator, lpsCutoff, hpsCutoff
+      rwpIndicator, hvpIndicator, lpsCutoff, hpsCutoff,
+      feedPressure, productPressure, backwashPressure, components
     };
 
     // Save telemetry

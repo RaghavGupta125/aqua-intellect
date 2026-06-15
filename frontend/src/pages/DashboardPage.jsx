@@ -189,7 +189,7 @@ export default function DashboardPage() {
                     <th>Facility</th>
                     <th>Type</th>
                     <th>Status</th>
-                    <th>TDS</th>
+                    <th>TDS/Press</th>
                     <th>Flow</th>
                     <th>Alarms</th>
                     <th></th>
@@ -217,7 +217,9 @@ export default function DashboardPage() {
                         </td>
                         <td><StatusBadge status={plant.status} /></td>
                         <td className="font-mono text-sm">
-                          {plant.lastTelemetry?.tds != null ? `${plant.lastTelemetry.tds} ppm` : '—'}
+                          {plant.type === 'UF' 
+                            ? (plant.lastTelemetry?.productPressure != null ? `${plant.lastTelemetry.productPressure} bar` : '—')
+                            : (plant.lastTelemetry?.tds != null ? `${plant.lastTelemetry.tds} ppm` : '—')}
                         </td>
                         <td className="font-mono text-sm">
                           {plant.lastTelemetry?.flow != null ? `${plant.lastTelemetry.flow} m³/h` : '—'}

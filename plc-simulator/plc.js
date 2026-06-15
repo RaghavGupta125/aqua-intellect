@@ -215,6 +215,33 @@ function simulateTick(plant) {
   const lpsCutoff    = !isFault || Math.random() > 0.2;
   const hpsCutoff    = !isFault || Math.random() > 0.2;
 
+  // 5. UF Specific Data
+  const isUF = !isRO;
+  const feedPressure = isUF ? round(s.pressure * 1.1 + noise(0.2), 2) : undefined;
+  const productPressure = isUF ? round(s.pressure * 0.9 + noise(0.1), 2) : undefined;
+  // Backwash happens occasionally, randomly spike pressure
+  const backwashPressure = isUF ? round(s.pressure * 1.5 + noise(0.5), 2) : undefined;
+  
+  // UF Components State Generation
+  let components = undefined;
+  if (isUF) {
+    // Generate arrays of components with on/off states. Some might trip if isFault.
+    const getStates = (count, baseChance) => {
+      const arr = [];
+      for (let i = 1; i <= count; i++) {
+        arr.push({ id: `${i}`, state: Math.random() > baseChance });
+      }
+      return arr;
+    };
+    
+    components = {
+      sv: getStates(3, isFault ? 0.4 : 0.05), // 3 Solenoid valves
+      rawWaterPumps: getStates(2, isFault ? 0.3 : 0.05), // 2 RWP
+      highPressurePumps: getStates(2, isFault ? 0.5 : 0.1), // 2 HPP
+      backPressurePumps: getStates(2, isFault ? 0.4 : 0.1), // 2 BPP
+    };
+  }
+
   return {
     plantId:   plant.plantId,
     facility:  plant.facility,
@@ -240,6 +267,11 @@ function simulateTick(plant) {
     hvpIndicator,
     lpsCutoff,
     hpsCutoff,
+    // UF Specific fields (undefined for RO)
+    feedPressure,
+    productPressure,
+    backwashPressure,
+    components,
   };
 }
 
