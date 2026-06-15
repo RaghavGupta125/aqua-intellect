@@ -9,7 +9,14 @@ const router = express.Router();
 // POST /api/telemetry  (PLC endpoint - no auth required for PLC devices)
 router.post('/', async (req, res) => {
   try {
-    const { plantId, facility, timestamp, flow, pressure, tds, ph, tankLevel } = req.body;
+    const { 
+      plantId, facility, timestamp, flow, pressure, tds, ph, tankLevel,
+      inletTds, outletTds,
+      inletPressure1, inletPressure2, inletPressure3,
+      outletPressure1, outletPressure2,
+      rawWaterFlow, productWaterFlow, rejectFlow,
+      rwpIndicator, hvpIndicator, lpsCutoff, hpsCutoff
+    } = req.body;
 
     if (!plantId) {
       return res.status(400).json({ message: 'plantId is required' });
@@ -23,33 +30,37 @@ router.post('/', async (req, res) => {
 
     const ts = timestamp ? new Date(timestamp) : new Date();
 
+    const telemetryData = {
+      flow, pressure, tds, ph, tankLevel, timestamp: ts,
+      inletTds, outletTds,
+      inletPressure1, inletPressure2, inletPressure3,
+      outletPressure1, outletPressure2,
+      rawWaterFlow, productWaterFlow, rejectFlow,
+      rwpIndicator, hvpIndicator, lpsCutoff, hpsCutoff
+    };
+
     // Save telemetry
     const telemetry = await Telemetry.create({
       plantId,
       plant: plant._id,
       facility: plant.facility,
       facilityName: plant.facilityName,
-      timestamp: ts,
-      flow,
-      pressure,
-      tds,
-      ph,
-      tankLevel,
+      ...telemetryData
     });
 
     // Update plant last telemetry and set online
     await Plant.findByIdAndUpdate(plant._id, {
       status: 'online',
-      lastTelemetry: { tds, ph, flow, pressure, tankLevel, timestamp: ts },
+      lastTelemetry: telemetryData,
     });
 
     // Process alarms
-    await processAlarms(plant, { flow, pressure, tds, ph, tankLevel, timestamp: ts });
+    await processAlarms(plant, telemetryData);
 
     // Broadcast telemetry update
     const io = getIO();
     if (io) {
-      const payload = { plantId, flow, pressure, tds, ph, tankLevel, timestamp: ts };
+      const payload = { plantId, ...telemetryData };
       io.emit('telemetry:update', payload);
       io.to(`plant:${plantId}`).emit('telemetry:plant', payload);
     }

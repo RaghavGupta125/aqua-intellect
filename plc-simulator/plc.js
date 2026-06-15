@@ -186,15 +186,60 @@ function simulateTick(plant) {
     s.tankLevel  = clamp(s.tankLevel, cfg.tankLevel.min, cfg.tankLevel.max);
   }
 
+  // ── Detailed Mock Data Calculation ──────────────────────────
+  const isRO = cfg.type === 'RO';
+  const isFault = s.faultTick > 0;
+
+  // 1. Flow Splits (Recovery: RO ~70%, UF ~95%)
+  const recoveryRate = isRO ? 0.70 : 0.95;
+  const rawWaterFlow = round(s.flow / recoveryRate, 1);
+  const productWaterFlow = round(s.flow, 1);
+  const rejectFlow = round(rawWaterFlow - productWaterFlow, 1);
+
+  // 2. TDS (Inlet TDS is much higher for RO than the final product)
+  const inletTds = isRO ? round(s.tds * 25 + noise(10), 1) : round(s.tds * 1.2 + noise(2), 1);
+  const outletTds = round(s.tds, 1);
+
+  // 3. Individual named pressure fields (max 3 inlet stages, 2 outlet stages)
+  // RO: 3 inlet + 2 outlet stages. UF: 1 inlet + 1 outlet stage (others null).
+  const inletPressure1 = round(s.pressure * 1.00 + noise(0.2), 2);
+  const inletPressure2 = isRO ? round(s.pressure * 1.15 + noise(0.2), 2) : null;
+  const inletPressure3 = isRO ? round(s.pressure * 1.30 + noise(0.2), 2) : null;
+  const outletPressure1 = round(s.pressure * 0.80 + noise(0.1), 2);
+  const outletPressure2 = isRO ? round(s.pressure * 0.60 + noise(0.1), 2) : null;
+
+  // 4. Indicators and Cutoffs (true = Normal/Run, false = Trip/Cutoff)
+  // When a fault occurs, there's a chance these trip.
+  const rwpIndicator = !isFault || Math.random() > 0.4;
+  const hvpIndicator = !isFault || Math.random() > 0.4;
+  const lpsCutoff    = !isFault || Math.random() > 0.2;
+  const hpsCutoff    = !isFault || Math.random() > 0.2;
+
   return {
     plantId:   plant.plantId,
     facility:  plant.facility,
     timestamp: new Date().toISOString(),
-    flow:      round(s.flow, 1),
+    // Legacy fields (kept for backward compatibility with old UI components if any)
+    flow:      productWaterFlow,
     pressure:  round(s.pressure, 2),
-    tds:       round(s.tds, 1),
+    tds:       outletTds,
     ph:        round(s.ph, 2),
     tankLevel: round(s.tankLevel, 1),
+    // Detailed fields
+    inletTds,
+    outletTds,
+    inletPressure1,
+    inletPressure2,
+    inletPressure3,
+    outletPressure1,
+    outletPressure2,
+    rawWaterFlow,
+    productWaterFlow,
+    rejectFlow,
+    rwpIndicator,
+    hvpIndicator,
+    lpsCutoff,
+    hpsCutoff,
   };
 }
 

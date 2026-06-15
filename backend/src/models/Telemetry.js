@@ -12,6 +12,21 @@ const telemetrySchema = new mongoose.Schema(
     tds: { type: Number },         // ppm
     ph: { type: Number },
     tankLevel: { type: Number },   // %
+    // Detailed telemetry
+    inletTds: { type: Number },
+    outletTds: { type: Number },
+    inletPressure1: { type: Number },    // bar - stage 1
+    inletPressure2: { type: Number },    // bar - stage 2 (RO only)
+    inletPressure3: { type: Number },    // bar - stage 3 (RO only)
+    outletPressure1: { type: Number },   // bar - stage 1
+    outletPressure2: { type: Number },   // bar - stage 2 (RO only)
+    rawWaterFlow: { type: Number },
+    productWaterFlow: { type: Number },
+    rejectFlow: { type: Number },
+    rwpIndicator: { type: Boolean },
+    hvpIndicator: { type: Boolean },
+    lpsCutoff: { type: Boolean },
+    hpsCutoff: { type: Boolean },
   },
   { timestamps: true }
 );

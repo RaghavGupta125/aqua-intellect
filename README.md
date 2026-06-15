@@ -42,7 +42,7 @@ npm run seed:init
 npm run dev
 ```
 
-Backend runs at: **http://localhost:4000**
+Backend runs at: **http://127.0.0.1:4000**
 
 ### 2. Frontend Setup
 
@@ -54,16 +54,17 @@ npm run dev
 
 Frontend runs at: **http://localhost:5173**
 
-### 3. Start Demo Data Seeder (Optional — recommended for demos)
+### 3. Start PLC Simulator (Recommended for live demo)
 
 In a separate terminal:
 
 ```bash
-cd backend
-node scripts/seeder.js
+cd plc-simulator
+# Edit .env and set: BACKEND_URL=http://127.0.0.1:4000
+node plc.js
 ```
 
-This sends fake PLC telemetry every 5 seconds to all plants. Dashboard will update live.
+Sends realistic PLC telemetry every 5 seconds to all 8 plants. The dashboard updates live with full sensor data including multi-stage pressures, flow splits, TDS, and equipment indicators.
 
 ---
 
@@ -80,50 +81,91 @@ This sends fake PLC telemetry every 5 seconds to all plants. Dashboard will upda
 
 ## Demo Facilities & Plants
 
-| Facility         | Plants                    |
-|-----------------|---------------------------|
-| Pantnagar Plant | PNT-RO-01, PNT-UF-01, PNT-UF-02 |
-| Pune Plant      | PNE-RO-01, PNE-RO-02, PNE-UF-01 |
-| Jamshedpur Plant| JSR-RO-01, JSR-UF-01      |
+| Facility          | Plants                             |
+|-------------------|------------------------------------|
+| Pantnagar Plant   | PNT-RO-01, PNT-UF-01, PNT-UF-02   |
+| Pune Plant        | PNE-RO-01, PNE-RO-02, PNE-UF-01   |
+| Jamshedpur Plant  | JSR-RO-01, JSR-UF-01               |
 
 ---
 
 ## PLC Integration
 
-Send POST requests to ingest telemetry:
+Send POST requests to ingest telemetry. **No authentication required** on this endpoint (PLC devices connect directly).
 
 ```
 POST http://localhost:4000/api/telemetry
 Content-Type: application/json
+```
 
+### Full Telemetry Payload
+
+```json
 {
   "plantId": "PNT-RO-01",
-  "facility": "Pantnagar Plant",
-  "timestamp": "2026-01-01T10:00:00Z",
-  "flow": 120,
-  "pressure": 3.5,
-  "tds": 42,
-  "ph": 7.1,
-  "tankLevel": 78
+  "timestamp": "2026-06-15T10:00:00Z",
+
+  "flow": 120.5,
+  "pressure": 3.85,
+  "tds": 38.2,
+  "ph": 7.21,
+  "tankLevel": 72.1,
+
+  "inletTds": 955.0,
+  "outletTds": 38.2,
+
+  "inletPressure1": 3.85,
+  "inletPressure2": 4.43,
+  "inletPressure3": 5.01,
+
+  "outletPressure1": 3.08,
+  "outletPressure2": 2.31,
+
+  "rawWaterFlow": 172.1,
+  "productWaterFlow": 120.5,
+  "rejectFlow": 51.6,
+
+  "rwpIndicator": true,
+  "hvpIndicator": true,
+  "lpsCutoff": true,
+  "hpsCutoff": true
 }
 ```
 
-No authentication required on this endpoint (PLC devices).
+**Field notes:**
+- `inletPressure2`, `inletPressure3`, `outletPressure2` — RO plants only. Send `null` or omit for UF.
+- `rwpIndicator` / `hvpIndicator` — `true` = Running, `false` = Tripped.
+- `lpsCutoff` / `hpsCutoff` — `true` = Normal, `false` = Cutoff/Trip.
 
 ---
 
-## Alarm Thresholds (Default)
+## Alarm Engine
 
-| Parameter    | Default Threshold   | Severity |
-|-------------|---------------------|----------|
-| TDS          | > 50 ppm            | Critical |
-| Pressure     | < 2.0 bar           | Warning  |
-| Pressure     | > 6.0 bar           | Warning  |
-| Tank Level   | < 20%               | Warning  |
-| pH           | < 6.5 or > 8.5      | Info     |
-| Flow Rate    | < 50 m³/h           | Warning  |
+Alarms are evaluated automatically on every telemetry tick.
 
-Thresholds are configurable per plant via the backend API.
+### Lifecycle
+
+```
+Out of Range ──► active ──► acknowledged ──► resolved (auto, when back in range)
+```
+
+- A new alarm is **only created once** per type per plant while it remains out of range.
+- When the value returns to range, the alarm is **automatically resolved** with an `endTime`.
+- Users can **acknowledge** an active alarm — it stays open but is marked as seen.
+
+### Alarm Types & Default Thresholds
+
+| Alarm Type      | Severity | Condition              | Default Threshold |
+|-----------------|----------|------------------------|-------------------|
+| `TDS_HIGH`      | Critical | `tds > tdsMax`         | > 50 ppm          |
+| `PRESSURE_LOW`  | Warning  | `pressure < pressureMin` | < 2.0 bar       |
+| `PRESSURE_HIGH` | Warning  | `pressure > pressureMax` | > 6.0 bar       |
+| `TANK_LEVEL_LOW`| Warning  | `tankLevel < tankLevelMin` | < 20%         |
+| `PH_LOW`        | Info     | `ph < phMin`           | < 6.5             |
+| `PH_HIGH`       | Info     | `ph > phMax`           | > 8.5             |
+| `FLOW_LOW`      | Warning  | `flow < flowMin`       | < 50 m³/h         |
+
+Thresholds are configurable per plant via the UI (admin/supervisor role) or API.
 
 ---
 
@@ -133,23 +175,26 @@ Thresholds are configurable per plant via the backend API.
 aqua-intellect/
 ├── backend/
 │   ├── src/
-│   │   ├── controllers/
-│   │   ├── routes/          # Express routers
-│   │   ├── models/          # Mongoose schemas
-│   │   ├── services/        # Alarm engine, report generation
-│   │   ├── middleware/      # JWT auth
-│   │   └── sockets/        # Socket.IO manager
+│   │   ├── routes/          # Express routers (auth, plants, telemetry, alarms, reports, dashboard)
+│   │   ├── models/          # Mongoose schemas (Plant, Telemetry, Alarm, Facility, Report, User)
+│   │   ├── services/        # Alarm engine (alarmEngine.js)
+│   │   ├── middleware/      # JWT auth middleware
+│   │   └── sockets/         # Socket.IO manager
 │   └── scripts/
-│       ├── initSeed.js     # One-time seed (users, facilities, plants)
-│       └── seeder.js       # Continuous PLC simulator
+│       ├── initSeed.js      # One-time seed (users, facilities, plants)
+│       └── seeder.js        # Legacy data seeder
+│
+├── plc-simulator/
+│   ├── plc.js               # Virtual PLC — simulates 8 plants with realistic sensor payloads
+│   └── .env                 # BACKEND_URL, INTERVAL_MS (gitignored)
 │
 └── frontend/
     └── src/
-        ├── components/     # Layout, UI components
-        ├── pages/          # Route-level pages
-        ├── features/       # Auth context
-        ├── services/       # API client, Socket.IO client
-        └── routes/         # Route guards
+        ├── components/      # Layout, UI primitives (Badge, Spinner, Sidebar)
+        ├── pages/           # Route-level pages (Dashboard, Plants, PlantDetail, Login)
+        ├── features/        # Auth context
+        ├── services/        # Axios API client, Socket.IO client
+        └── routes/          # Auth-guarded route wrappers
 ```
 
 ---
@@ -159,64 +204,62 @@ aqua-intellect/
 ### MongoDB Atlas
 
 1. Create a free cluster at https://cloud.mongodb.com
-2. Get your connection string: `mongodb+srv://user:pass@cluster.mongodb.net/aqua-intellect`
-3. Update `MONGODB_URI` in backend `.env`
+2. Get connection string: `mongodb+srv://user:pass@cluster.mongodb.net/aqua-intellect`
+3. Set `MONGODB_URI` in backend `.env`
 
 ### Backend — Render
 
-1. Push `backend/` to GitHub
-2. Create a new **Web Service** on https://render.com
+1. Push to GitHub
+2. Create a **Web Service** on https://render.com
 3. Build command: `npm install`
 4. Start command: `npm start`
-5. Set environment variables:
-   - `MONGODB_URI` = your Atlas URI
-   - `JWT_SECRET` = a long random string
-   - `FRONTEND_URL` = your Vercel frontend URL
-   - `PORT` = 4000
+5. Environment variables:
+   - `MONGODB_URI` — Atlas URI
+   - `JWT_SECRET` — long random string
+   - `FRONTEND_URL` — Vercel frontend URL
+   - `PORT` — 4000
 
 ### Frontend — Vercel
 
-1. Push `frontend/` to GitHub
-2. Create a new project on https://vercel.com
-3. Framework: Vite
-4. Build command: `npm run build`
-5. Output directory: `dist`
-6. Set environment variables:
-   - `VITE_API_URL` = your Render backend URL
-
-Update `vite.config.js` proxy target to your Render URL for production.
+1. Push to GitHub
+2. Create a project on https://vercel.com
+3. Framework: Vite · Build: `npm run build` · Output: `dist`
 
 ---
 
 ## API Reference
 
-| Method | Endpoint                         | Description           | Auth   |
-|--------|----------------------------------|-----------------------|--------|
-| POST   | /api/auth/login                  | Login                 | No     |
-| GET    | /api/auth/me                     | Current user          | Yes    |
-| GET    | /api/dashboard/summary           | KPI summary           | Yes    |
-| GET    | /api/dashboard/plant-health      | Plant health table    | Yes    |
-| GET    | /api/facilities                  | List facilities       | Yes    |
-| POST   | /api/facilities                  | Create facility       | Admin  |
-| GET    | /api/plants                      | List plants           | Yes    |
-| POST   | /api/plants                      | Create plant          | Admin  |
-| GET    | /api/plants/:id                  | Plant detail          | Yes    |
-| POST   | /api/telemetry                   | Ingest telemetry      | No     |
-| GET    | /api/telemetry/:plantId          | Telemetry history     | Yes    |
-| GET    | /api/alarms                      | List alarms           | Yes    |
-| POST   | /api/alarms/:id/acknowledge      | Acknowledge alarm     | Yes    |
-| POST   | /api/reports/generate            | Generate report       | Yes    |
-| GET    | /api/reports/:plantId/export/csv | Export CSV            | Yes    |
-| GET    | /api/health                      | Health check          | No     |
+| Method | Endpoint                          | Description           | Auth  |
+|--------|-----------------------------------|-----------------------|-------|
+| POST   | /api/auth/login                   | Login                 | No    |
+| GET    | /api/auth/me                      | Current user          | Yes   |
+| GET    | /api/dashboard/summary            | KPI summary           | Yes   |
+| GET    | /api/dashboard/plant-health       | Plant health table    | Yes   |
+| GET    | /api/dashboard/recent-alarms      | Recent alarms         | Yes   |
+| GET    | /api/facilities                   | List facilities       | Yes   |
+| POST   | /api/facilities                   | Create facility       | Admin |
+| GET    | /api/plants                       | List plants           | Yes   |
+| POST   | /api/plants                       | Create plant          | Admin |
+| GET    | /api/plants/:id                   | Plant detail          | Yes   |
+| PATCH  | /api/plants/:id/thresholds        | Update thresholds     | Admin |
+| POST   | /api/telemetry                    | Ingest telemetry      | No    |
+| GET    | /api/telemetry/:plantId           | Telemetry history     | Yes   |
+| GET    | /api/telemetry/:plantId/latest    | Latest reading        | Yes   |
+| GET    | /api/alarms                       | List alarms           | Yes   |
+| POST   | /api/alarms/:id/acknowledge       | Acknowledge alarm     | Yes   |
+| POST   | /api/reports/generate             | Generate report       | Yes   |
+| GET    | /api/reports/:plantId/export/csv  | Export CSV            | Yes   |
+| GET    | /api/health                       | Health check          | No    |
 
 ---
 
 ## Socket.IO Events
 
-| Event              | Direction       | Description               |
-|--------------------|-----------------|---------------------------|
-| `telemetry:update` | Server → Client | New telemetry broadcast   |
-| `telemetry:plant`  | Server → Client | Plant-specific telemetry  |
-| `alarm:new`        | Server → Client | New alarm created         |
-| `alarm:resolved`   | Server → Client | Alarm auto-resolved       |
-| `subscribe:plant`  | Client → Server | Subscribe to plant feed   |
+| Event               | Direction       | Description                         |
+|---------------------|-----------------|-------------------------------------|
+| `telemetry:update`  | Server → Client | Full telemetry broadcast (all PLCs) |
+| `telemetry:plant`   | Server → Client | Plant-specific telemetry feed       |
+| `alarm:new`         | Server → Client | New alarm created                   |
+| `alarm:resolved`    | Server → Client | Alarm auto-resolved                 |
+| `subscribe:plant`   | Client → Server | Subscribe to a plant's live feed    |
+| `unsubscribe:plant` | Client → Server | Unsubscribe from a plant's feed     |

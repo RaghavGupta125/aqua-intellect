@@ -23,11 +23,19 @@ import clsx from 'clsx';
 function MetricRow({ label, value, unit, good, bad }) {
   const textColor =
     bad ? 'text-alarm-critical' : good ? 'text-green-600' : 'text-ink';
+
+  // Round numeric values to 2 decimal places; treat empty strings as missing
+  const display = (() => {
+    if (value == null || value === '') return null;
+    if (typeof value === 'number') return parseFloat(value.toFixed(2));
+    return value;
+  })();
+
   return (
     <div className="flex items-center justify-between py-3 border-b border-surface-border last:border-0">
       <span className="text-sm text-ink-secondary">{label}</span>
       <span className={clsx('font-mono text-sm font-medium', textColor)}>
-        {value != null ? `${value}${unit ? ' ' + unit : ''}` : '—'}
+        {display != null ? `${display}${unit ? ' ' + unit : ''}` : '—'}
       </span>
     </div>
   );
@@ -91,13 +99,30 @@ function OverviewTab({ plant, liveData, onPlantUpdate }) {
           <h3 className="text-sm font-semibold text-ink">Live Readings</h3>
         </div>
         <div className="px-4">
+          <MetricRow label="Inlet TDS" value={d?.inletTds} unit="ppm" />
           <MetricRow
-            label="TDS"
-            value={d?.tds}
+            label="Outlet TDS"
+            value={d?.outletTds ?? d?.tds}
             unit="ppm"
-            bad={d?.tds > t.tdsMax}
-            good={d?.tds <= t.tdsMax}
+            bad={(d?.outletTds ?? d?.tds) > t.tdsMax}
+            good={(d?.outletTds ?? d?.tds) <= t.tdsMax}
           />
+          <MetricRow label="Raw Water Flow" value={d?.rawWaterFlow} unit="m³/h" />
+          <MetricRow
+            label="Product Flow"
+            value={d?.productWaterFlow ?? d?.flow}
+            unit="m³/h"
+            bad={(d?.productWaterFlow ?? d?.flow) < t.flowMin}
+            good={(d?.productWaterFlow ?? d?.flow) >= t.flowMin}
+          />
+          <MetricRow label="Reject Flow" value={d?.rejectFlow} unit="m³/h" />
+          
+          <MetricRow label="Inlet Pressure 1" value={d?.inletPressure1} unit="bar" />
+          <MetricRow label="Inlet Pressure 2" value={d?.inletPressure2} unit="bar" />
+          <MetricRow label="Inlet Pressure 3" value={d?.inletPressure3} unit="bar" />
+          <MetricRow label="Outlet Pressure 1" value={d?.outletPressure1} unit="bar" />
+          <MetricRow label="Outlet Pressure 2" value={d?.outletPressure2} unit="bar" />
+          
           <MetricRow
             label="pH"
             value={d?.ph}
@@ -105,25 +130,44 @@ function OverviewTab({ plant, liveData, onPlantUpdate }) {
             good={d?.ph >= t.phMin && d?.ph <= t.phMax}
           />
           <MetricRow
-            label="Flow Rate"
-            value={d?.flow}
-            unit="m³/h"
-            bad={d?.flow < t.flowMin}
-            good={d?.flow >= t.flowMin}
-          />
-          <MetricRow
-            label="Pressure"
-            value={d?.pressure}
-            unit="bar"
-            bad={d?.pressure < t.pressureMin || d?.pressure > t.pressureMax}
-            good={d?.pressure >= t.pressureMin && d?.pressure <= t.pressureMax}
-          />
-          <MetricRow
             label="Tank Level"
             value={d?.tankLevel}
             unit="%"
             bad={d?.tankLevel < t.tankLevelMin}
             good={d?.tankLevel >= t.tankLevelMin}
+          />
+        </div>
+      </div>
+
+      {/* Pump & Switch Status */}
+      <div className="card">
+        <div className="card-header">
+          <h3 className="text-sm font-semibold text-ink">Equipment Status</h3>
+        </div>
+        <div className="px-4">
+          <MetricRow 
+            label="Raw Water Pump (RWP)" 
+            value={d?.rwpIndicator !== undefined ? (d.rwpIndicator ? 'Running' : 'Tripped') : '—'} 
+            bad={d?.rwpIndicator === false} 
+            good={d?.rwpIndicator === true} 
+          />
+          <MetricRow 
+            label="High Vol Pump (HVP)" 
+            value={d?.hvpIndicator !== undefined ? (d.hvpIndicator ? 'Running' : 'Tripped') : '—'} 
+            bad={d?.hvpIndicator === false} 
+            good={d?.hvpIndicator === true} 
+          />
+          <MetricRow 
+            label="LPS Cutoff" 
+            value={d?.lpsCutoff !== undefined ? (d.lpsCutoff ? 'Normal' : 'Cutoff') : '—'} 
+            bad={d?.lpsCutoff === false} 
+            good={d?.lpsCutoff === true} 
+          />
+          <MetricRow 
+            label="HPS Cutoff" 
+            value={d?.hpsCutoff !== undefined ? (d.hpsCutoff ? 'Normal' : 'Cutoff') : '—'} 
+            bad={d?.hpsCutoff === false} 
+            good={d?.hpsCutoff === true} 
           />
         </div>
       </div>
